@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, render_template
-from tensorflow.keras.preprocessing import image
 import numpy as np
 import tensorflow as tf
 from PIL import Image
@@ -7,7 +6,7 @@ from PIL import Image
 app = Flask(__name__)
 
 # Load the trained model
-model_path = 'ReducedPlantDiseaseDetection.h5'
+model_path = 'NewReducedPlantDiseaseDetection.h5'
 loaded_model = tf.keras.models.load_model(model_path)
 print("Model loaded successfully.")
 
@@ -21,10 +20,15 @@ class_names = [
 
 # Function to preprocess the image
 def preprocess_image(file):
-    file_path = file.filename
     img = Image.open(file)
     img = img.resize((224, 224))
     img_array = np.array(img)
+    
+    # Check number of channels
+    if img_array.shape[-1] == 4:
+        # Convert RGBA to RGB
+        img_array = img_array[:, :, :3]
+    
     img_array = np.expand_dims(img_array, axis=0)
     return img_array
 
@@ -49,10 +53,13 @@ def predict():
         return jsonify({'error': 'No selected file'})
     
     if file:
-        img_array = preprocess_image(file)
-        predicted_plant = get_predictions(img_array).split('__')[0]
-        predict_disease = get_predictions(img_array).split('__')[1]
-        return render_template('index.html', predicted_plant=predicted_plant, predict_disease = predict_disease)
+        try:
+            img_array = preprocess_image(file)
+            predicted_plant = get_predictions(img_array).split('__')[0]
+            predict_disease = get_predictions(img_array).split('__')[1]
+            return render_template('index.html', predicted_plant=predicted_plant, predict_disease=predict_disease)
+        except Exception as e:
+            return jsonify({'error': str(e)})  # Handle exception
 
 if __name__ == '__main__':
     app.run(debug=True)
