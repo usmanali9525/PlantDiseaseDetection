@@ -6,7 +6,7 @@ from PIL import Image
 app = Flask(__name__)
 
 # Load the trained model
-model_path = 'NewReducedPlantDiseaseDetection.h5'
+model_path = 'NewReducedPlantDiseaseDetection1.h5'
 loaded_model = tf.keras.models.load_model(model_path)
 print("Model loaded successfully.")
 
